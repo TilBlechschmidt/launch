@@ -1,0 +1,15 @@
+{
+  "id": "01GQWZYM4W7C2T21H182AH7MAP",
+  "root": "test",
+  "name": "test",
+  "domain": "test.blechschmidt.dev",
+  "compress": [
+    "html",
+    "js",
+    "json",
+    "css",
+    "woff",
+    "woff2"
+  ],
+  "fallback": null
+}

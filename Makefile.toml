@@ -1,0 +1,9 @@
+[tasks.build]
+command = "cargo"
+args = ["build", "--target=x86_64-unknown-linux-musl", "--release"]
+
+[tasks.upload]
+cwd = "target/x86_64-unknown-linux-musl/release"
+command = "scp"
+args = ["launch", "wryhta:launch/server"]
+dependencies = ["build"]
