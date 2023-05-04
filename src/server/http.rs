@@ -18,8 +18,10 @@ kubectl apply -f $INGRESS_PATH
 
 OLD_INGRESS=$(kubectl get ingress -o=jsonpath="{.items[?(@.metadata.annotations.dev\.blechschmidt\.launch/deploy-id!=\"$DEPLOY_ID\")].metadata.name}")
 
-echo "Deleting stale ingress resources: '$OLD_INGRESS'"
-kubectl delete ingress $OLD_INGRESS
+if [ "$str" != "" ];then
+    echo "Deleting stale ingress resources: '$OLD_INGRESS'"
+    kubectl delete ingress $OLD_INGRESS
+fi
 "#;
 
 pub struct Server {
@@ -83,7 +85,8 @@ metadata:
     dev.blechschmidt.launch/deploy-id: {deploy_id}
 spec:
   rules:
-  - http:
+  - host: {domain}
+    http:
       paths:
       - path: /
         pathType: Prefix
