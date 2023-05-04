@@ -1,3 +1,4 @@
+#[cfg(feature = "client")]
 mod client;
 mod server;
 mod shared;
@@ -9,6 +10,7 @@ use shared::*;
 enum Command {
     Server,
 
+    #[cfg(feature = "client")]
     #[command(flatten)]
     Client(client::Command),
 }
@@ -18,6 +20,7 @@ fn main() -> anyhow::Result<()> {
 
     match command {
         Command::Server => server::run(),
+        #[cfg(feature = "client")]
         Command::Client(cmd) => client::run(cmd),
     }
 }

@@ -11,7 +11,7 @@ comfy-table = "6.1.4"
 console = "0.15.5"
 directories = "4.0.1"
 flate2 = "1.0.25"
-git2 = { version = "0.16.1", default-features = false }
+git2 = { version = "0.16.1", default-features = false, optional = true }
 indicatif = "0.17.3"
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.91"
@@ -21,6 +21,10 @@ tiny_http = "0.12.0"
 ulid = { version = "1.0.0", features = ["serde"] }
 ureq = { version = "2.6.2", default-features = false, features = ["json"] }
 walkdir = "2.3.2"
+
+[features]
+default = []
+client = ["git2"]
 
 [target.serde.dependencies]
 ulid = "1.0.0"
