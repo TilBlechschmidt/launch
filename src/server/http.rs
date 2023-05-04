@@ -14,9 +14,9 @@ use ulid::Ulid;
 
 const INGRESS_UPDATE_SCRIPT: &str = r#"
 echo "Applying new ingress manifest"
-kubectl apply -f $1
+kubectl apply -f $INGRESS_PATH
 
-OLD_INGRESS=$(kubectl get ingress -o=jsonpath="{.items[?(@.metadata.annotations.dev\.blechschmidt\.launch/deploy-id!=\"$2\")].metadata.name}")
+OLD_INGRESS=$(kubectl get ingress -o=jsonpath="{.items[?(@.metadata.annotations.dev\.blechschmidt\.launch/deploy-id!=\"$DEPLOY_ID\")].metadata.name}")
 
 echo "Deleting stale ingress resources: '$OLD_INGRESS'"
 kubectl delete ingress $OLD_INGRESS
@@ -67,7 +67,7 @@ impl Server {
 
     fn reload_ingress(&self) -> io::Result<()> {
         if let Some(service) = &self.options.kube_service {
-            let deploy_id = Ulid::new();
+            let deploy_id = Ulid::new().to_string();
 
             let ingresses = self
                 .manager
@@ -96,7 +96,7 @@ spec:
             "#,
                         domain = domain,
                         service = service,
-                        deploy_id = deploy_id
+                        deploy_id = &deploy_id
                     )
                 })
                 .collect::<Vec<_>>()
@@ -108,8 +108,8 @@ spec:
 
             let status = Command::new("/bin/sh")
                 .args(["-c", INGRESS_UPDATE_SCRIPT])
-                .arg(deploy_id.to_string())
-                .arg(path)
+                .env("INGRESS_PATH", path)
+                .env("DEPLOY_ID", deploy_id)
                 .spawn()?
                 .wait()?;
 
