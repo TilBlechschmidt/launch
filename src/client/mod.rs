@@ -22,15 +22,23 @@ const LAUNCH_FILE_NAME: &str = "launch.json";
 
 #[derive(Subcommand)]
 pub enum Command {
+    /// Bootstraps the current folder for deployment
     Init(InitOptions),
+
+    /// Shows a list of all current deployments
+    #[clap(alias("ls"))]
     List {
         #[arg(short, long, env = "LAUNCH_ENDPOINT")]
         endpoint: String,
     },
+
+    /// Launches it (pushes the current repository)
     It {
         #[arg(short, long, env = "LAUNCH_ENDPOINT")]
         endpoint: String,
     },
+
+    /// Removes the current repository if it is deployed
     Deorbit {
         #[arg(short, long, env = "LAUNCH_ENDPOINT")]
         endpoint: String,
@@ -246,6 +254,13 @@ fn launch(endpoint: &str) -> Result<()> {
             }
 
             println!("{}", include_str!("./liftoff.txt"));
+
+            let url = format!("https://{}", config.bundle.domain);
+            println!(
+                "Visit \x1b]8;;{}\x07{}\x1b]8;;\x07 to check the mission!",
+                url, url
+            );
+
             Ok(())
         }
         Err(ureq::Error::Status(code, response)) => Err(anyhow!(

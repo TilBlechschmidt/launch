@@ -25,8 +25,8 @@ pub fn run() -> anyhow::Result<()> {
     let options = Options::default();
     let mut server = Server::new(options).expect("failed to create server");
 
-    println!("Listening on 0.0.0.0:8080");
-    server.listen(8080);
+    println!("Listening on 0.0.0.0:8088");
+    server.listen(8088);
 
     Ok(())
 }
@@ -34,7 +34,9 @@ pub fn run() -> anyhow::Result<()> {
 impl Default for Options {
     fn default() -> Self {
         Options {
-            kube_service: Some("launch".into()),
+            kube_service: Some(
+                std::env::var("LAUNCH_SERVICE").expect("Kubernetes service name not found in env"),
+            ),
 
             storage: "/var/www/bundles".into(),
             domains: vec![
