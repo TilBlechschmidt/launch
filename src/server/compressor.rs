@@ -11,8 +11,12 @@ use walkdir::{DirEntry, WalkDir};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Statistics {
+    /// Total bytes of all files combined
     pub size: u64,
-    pub savings: HashMap<Algorithm, u64>,
+    /// Number of bytes of compressible files only
+    pub compressible: u64,
+    /// Size of compressed files by algorithm
+    pub compressed: HashMap<Algorithm, u64>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -33,7 +37,8 @@ impl Compressor {
 
     pub fn compress(&self, dir: impl AsRef<Path>, filter: &[String]) -> io::Result<Statistics> {
         let mut total_size = 0;
-        let mut total_savings = HashMap::new();
+        let mut total_compressible = 0;
+        let mut total_compressed = HashMap::new();
 
         for entry in WalkDir::new(dir) {
             let entry = entry?;
@@ -48,15 +53,18 @@ impl Compressor {
                 continue;
             }
 
+            total_compressible += size;
+
             for algorithm in self.algorithms.iter() {
-                let savings = Compressor::apply(*algorithm, entry.path())?;
-                total_savings.insert(*algorithm, savings);
+                let compressed = Compressor::apply(*algorithm, entry.path())?;
+                total_compressed.insert(*algorithm, compressed);
             }
         }
 
         Ok(Statistics {
             size: total_size,
-            savings: total_savings,
+            compressible: total_compressible,
+            compressed: total_compressed,
         })
     }
 
@@ -76,8 +84,7 @@ impl Compressor {
 
         algorithm.compress(&mut source, &mut destination)?;
 
-        // TODO This is somehow completely wrong
-        Ok(source.stream_position()? - destination.stream_position()?)
+        Ok(destination.stream_position()?)
     }
 }
 

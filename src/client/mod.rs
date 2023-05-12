@@ -145,6 +145,7 @@ fn list(endpoint: &str) -> Result<()> {
             Cell::new("Name"),
             Cell::new("Domain").set_alignment(CellAlignment::Center),
             Cell::new("Size").set_alignment(CellAlignment::Right),
+            Cell::new("Savings").set_alignment(CellAlignment::Right),
         ]);
 
     for (id, bundle) in bundles {
@@ -158,6 +159,14 @@ fn list(endpoint: &str) -> Result<()> {
                     id_cell = id_cell.add_attribute(Attribute::Dim);
                 }
 
+                let brotli = if let Some(compressed) = stats.compressed.get(&Algorithm::Brotli) {
+                    let percentage =
+                        ((stats.compressible - compressed) as f64 / stats.size as f64) * 100.0;
+                    format!("{:0>2.2}%", percentage)
+                } else {
+                    "100%".into()
+                };
+
                 table.add_row(vec![
                     id_cell,
                     Cell::new(config.name).fg(Color::Green),
@@ -165,6 +174,7 @@ fn list(endpoint: &str) -> Result<()> {
                         .fg(Color::Cyan)
                         .set_alignment(CellAlignment::Right),
                     Cell::new(HumanBytes(stats.size)).set_alignment(CellAlignment::Right),
+                    Cell::new(brotli).set_alignment(CellAlignment::Right),
                 ]);
             }
             Bundle::Failed { error } => {
@@ -242,14 +252,28 @@ fn launch(endpoint: &str) -> Result<()> {
         Ok(response) => {
             let stats: Statistics = serde_json::from_reader(response.into_reader())?;
 
-            if let Some(savings) = stats.savings.get(&Algorithm::Brotli) {
-                let percentage = *savings as f64 / stats.size as f64 * 100.0;
+            if let Some(compressed) = stats.compressed.get(&Algorithm::Brotli) {
+                let percentage_total =
+                    ((stats.compressible - compressed) as f64 / stats.size as f64) * 100.0;
+                let percentage_burned =
+                    (1.0 - *compressed as f64 / stats.compressible as f64) * 100.0;
 
                 println!(
                     "         {} {}{}",
                     style("Burned").dim(),
-                    style((percentage * 100.0).round() / 100.0).dim().bold(),
+                    style((percentage_burned * 100.0).round() / 100.0)
+                        .dim()
+                        .bold(),
                     style("% of fuel").dim()
+                );
+
+                println!(
+                    "         {} {}{}",
+                    style("Lost").dim(),
+                    style((percentage_total * 100.0).round() / 100.0)
+                        .dim()
+                        .bold(),
+                    style("% of total mass").dim()
                 );
             }
 
