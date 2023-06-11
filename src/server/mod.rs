@@ -33,22 +33,20 @@ pub fn run() -> anyhow::Result<()> {
 
 impl Default for Options {
     fn default() -> Self {
+        let domains = std::env::var("LAUNCH_DOMAINS")
+            .expect("Domain list not found in env")
+            .split(",")
+            .map(|d| [d.into(), format!("*.{d}")])
+            .flatten()
+            .collect();
+
         Options {
             kube_service: Some(
                 std::env::var("LAUNCH_SERVICE").expect("Kubernetes service name not found in env"),
             ),
 
             storage: "/var/www/bundles".into(),
-            domains: vec![
-                "blechschmidt.de".into(),
-                "blechschmidt.dev".into(),
-                "groundtrack.app".into(),
-                "ucdaero.space".into(),
-                "*.blechschmidt.de".into(),
-                "*.blechschmidt.dev".into(),
-                "*.groundtrack.app".into(),
-                "*.ucdaero.space".into(),
-            ],
+            domains,
 
             caddy_dir: "/etc/caddy".into(),
             caddy_endpoint: "http://localhost:2019".into(),
